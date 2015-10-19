@@ -1,0 +1,84 @@
+<html>
+<head>
+<title>Pairing Timer</title>
+<link rel="stylesheet" href="css/bootstrap/bootstrap.min.css">
+<link rel="stylesheet" href="css/iconic/open-iconic-bootstrap.css">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="text-center">
+    <div class="quit"><span class="oi oi-power-standby" title="icon power-standby" aria-hidden="true"></span></div>
+    <div class="timer">
+            <input class="no-select" id="timer" value="00:05" disabled>
+    </div>
+    <div class="btn-toolbar buttons">
+            <button type="button" class="btn btn-primary btn-lg" id="start">Start</button>
+            <button type="button" class="btn btn-danger btn-lg" id="reset">Reset</button>
+
+    </div>
+    
+    <script src="js/tock/tock.min.js"></script>
+    <script src="js/moment/moment.min.js"></script>
+    <script>
+    // var Client = require('electron-rpc/client')
+    window.$ = window.jQuery = require('./js/jquery/jquery-2.1.4.min.js');
+    var bell = new Audio('audio/bell.wav');
+    var defaultTime = '15:00';
+    var countdown = new Tock({
+        countdown: true,
+        interval: 250,
+        callback: function() {
+            var timeLeft = moment.utc(countdown.lap()).format("mm:ss");
+            $('#timer').val(timeLeft);
+        },
+        complete: function() {
+            new Notification("Time to switch!", 
+            {
+                title: "Time to switch!",
+                body: "Switch now!"
+            });
+            client.request('alert');
+            bell.play();
+            countdown.stop();
+            started = false;
+            $('#start').html('Start');
+            $('#timer').val(defaultTime);
+        }
+    });
+
+    var started = false;
+
+     $('#start').on('click', function () {
+        if (started) {
+            countdown.pause();
+            started = false;
+            $('#start').html('Start');
+            $('#start').toggleClass('active');
+        } else {
+            countdown.start($('#timer').val());
+            started = true;
+            $('#start').html('Pause');
+            $('#start').toggleClass('active');
+        }
+     });
+
+     $('#reset').on('click', function () {
+         countdown.stop();
+         started = false;
+         $('#start').html('Start');
+         $('#timer').val(defaultTime);
+         $('#start').removeClass('active');
+     });
+
+     $(".btn").mouseup(function(){
+         $(this).blur();
+     })
+
+    var Client = require('electron-rpc/client')
+    var client = new Client();
+    $('.quit').on('click', function(){
+        client.request('quit');
+    });
+
+    </script>
+</body>
+</html>
